@@ -1,0 +1,141 @@
+import networkx as nx
+import matplotlib.pyplot as plt
+
+# Create a directed graph
+G = nx.DiGraph()
+
+# Define the top event
+G.add_node("Top", label="Engine Failure", color='lightblue', shape='rectangle', layer=0)
+
+# Define intermediate events
+intermediate_events = {
+    "IE1": "Ignition System Failure",
+    "IE2": "Fuel System Failure",
+    "IE3": "Oxidizer System Failure",
+    "IE4": "Structural Failure",
+    "IE5": "Control System Failure",
+    "IE6": "Cooling System Failure",
+    "IE7": "Combustion Instability",
+    "IE8": "Propellant System Failure"
+}
+
+for key, value in intermediate_events.items():
+    G.add_node(key, label=value, color='lightgrey', shape='ellipse', layer=1)
+
+# Define sub-intermediate events for Fuel System
+sub_intermediate_events = {
+    "IE2-1": "Fuel Line Failure",
+    "IE2-2": "Fuel Pump Failure",
+    "IE2-3": "Fuel Valve Failure",
+    "IE3-1": "Oxidizer Line Failure",
+    "IE3-2": "Oxidizer Pump Failure",
+    "IE3-3": "Oxidizer Valve Failure",
+    "IE4-1": "Thrust Structure Failure",
+    "IE4-2": "Nozzle Separation",
+    "IE6-1": "Coolant Leakage",
+    "IE6-2": "Coolant Blockage",
+    "IE7-1": "High-frequency Oscillations",
+    "IE7-2": "Low-frequency Oscillations",
+    "IE8-1": "Propellant Tank Overpressure",
+    "IE8-2": "Propellant Tank Leakage"
+}
+
+for key, value in sub_intermediate_events.items():
+    G.add_node(key, label=value, color='lightgrey', shape='ellipse', layer=2)
+
+# Define basic events with specific documented failures
+basic_events = {
+    "B1": "Electrical Failure (Test: 2023-02-20)",
+    "B2": "Incorrect Fuel/Oxidizer Ratio",
+    "B3": "Fuel Line Leakage (Test: 2022-11-15)",
+    "B4": "Fuel Line Blockage",
+    "B5": "Fuel Pump Mechanical Failure (Test: 2023-01-10)",
+    "B6": "Fuel Pump Electrical Failure",
+    "B7": "Fuel Valve Stuck",
+    "B8": "Oxidizer Line Leakage",
+    "B9": "Oxidizer Line Blockage",
+    "B10": "Oxidizer Pump Mechanical Failure (Test: 2023-03-05)",
+    "B11": "Oxidizer Pump Electrical Failure",
+    "B12": "Oxidizer Valve Stuck",
+    "B13": "Structural Weakness (Test: 2022-12-22)",
+    "B14": "Excessive Vibration",
+    "B15": "Sensor Malfunction",
+    "B16": "Software Error",
+    "B17": "Coolant System Mechanical Failure",
+    "B18": "Coolant System Electrical Failure",
+    "B19": "Combustion High-frequency Oscillations (Test: 2022-10-30)",
+    "B20": "Combustion Low-frequency Oscillations",
+    "B21": "Propellant Tank Overpressure (Test: 2022-09-18)",
+    "B22": "Propellant Tank Leakage",
+    "B23": "Ignition System Electrical Failure",
+    "B24": "Ignition System Mechanical Failure",
+    "B25": "Methane Turbopump Failure (Test: 2023-04-12)",
+    "B26": "Oxygen Turbopump Failure (Test: 2023-05-20)",
+    "B27": "Valve Control System Failure",
+    "B28": "Heat Exchanger Failure",
+    "B29": "Preburner Hard Start",
+    "B30": "Turbopump Hard Start",
+    "B31": "Flame Tracing Combustible Material"
+}
+
+for key, value in basic_events.items():
+    G.add_node(key, label=value, color='lightgreen', shape='rectangle', layer=3)
+
+# Define the connections between gates and events
+edges = [
+    ("Top", "IE1"), ("Top", "IE2"), ("Top", "IE3"), ("Top", "IE4"),
+    ("Top", "IE5"), ("Top", "IE6"), ("Top", "IE7"), ("Top", "IE8"),
+    ("IE1", "B23"), ("IE1", "B24"),
+    ("IE2", "IE2-1"), ("IE2", "IE2-2"), ("IE2", "IE2-3"),
+    ("IE2-1", "B3"), ("IE2-1", "B4"),
+    ("IE2-2", "B5"), ("IE2-2", "B6"),
+    ("IE2-3", "B7"),
+    ("IE3", "IE3-1"), ("IE3", "IE3-2"), ("IE3", "IE3-3"),
+    ("IE3-1", "B8"), ("IE3-1", "B9"),
+    ("IE3-2", "B10"), ("IE3-2", "B11"),
+    ("IE3-3", "B12"),
+    ("IE4", "IE4-1"), ("IE4", "IE4-2"),
+    ("IE4-1", "B13"), ("IE4-1", "B14"),
+    ("IE4-2", "B13"), ("IE4-2", "B14"),
+    ("IE5", "B15"), ("IE5", "B16"),
+    ("IE6", "IE6-1"), ("IE6", "IE6-2"),
+    ("IE6-1", "B17"), ("IE6-1", "B18"),
+    ("IE6-2", "B17"), ("IE6-2", "B18"),
+    ("IE7", "IE7-1"), ("IE7", "IE7-2"),
+    ("IE7-1", "B19"), ("IE7-2", "B20"),
+    ("IE8", "IE8-1"), ("IE8", "IE8-2"),
+    ("IE8-1", "B21"), ("IE8-2", "B22"),
+    ("IE3", "IE8"),  # Oxidizer System Failure contributes to Propellant System Failure
+    ("IE2", "B25"),  # Methane Turbopump Failure under Fuel System Failure
+    ("IE3", "B26"),  # Oxygen Turbopump Failure under Oxidizer System Failure
+    ("IE2-3", "B27"),  # Valve Control System Failure under Fuel Valve Failure
+    ("IE6", "B28"),  # Heat Exchanger Failure under Cooling System Failure
+    ("IE1", "B29"),  # Preburner Hard Start under Ignition System Failure
+    ("IE2-2", "B30"),  # Turbopump Hard Start under Fuel Pump Failure
+    ("IE7", "B31")  # Flame Tracing Combustible Material under Combustion Instability
+]
+
+G.add_edges_from(edges)
+
+# Use a hierarchical layout for better structure
+pos = nx.multipartite_layout(G, subset_key="layer")
+
+# Draw the graph
+plt.figure(figsize=(20, 20))
+node_labels = nx.get_node_attributes(G, 'label')
+node_colors = [G.nodes[node]['color'] for node in G.nodes]
+node_shapes = set(nx.get_node_attributes(G, 'shape').values())
+
+# Draw nodes with specific shapes
+for shape in node_shapes:
+    node_list = [node for node in G.nodes if G.nodes[node]['shape'] == shape]
+    nx.draw_networkx_nodes(G, pos, nodelist=node_list, node_color=[G.nodes[node]['color'] for node in node_list], 
+                           node_shape='o' if shape == 'ellipse' else 's', node_size=3000)
+
+nx.draw_networkx_labels(G, pos, labels=node_labels, font_size=10, font_weight='bold')
+nx.draw_networkx_edges(G, pos, edgelist=G.edges, arrows=True)
+
+plt.title('Fault Tree Analysis for SpaceX Raptor Engine')
+plt.axis('off')
+plt.savefig("Fault_Tree_Analysis_Raptor_Engine.pdf", format="pdf")
+plt.show()
